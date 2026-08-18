@@ -62,6 +62,11 @@ function isLoggedIn(req) {
 // Wrap any admin handler with this. Returns 401 unless the session is valid.
 function requireAdmin(handler) {
   return async (req, res) => {
+    // Never let a browser cache an admin response. Without this, the "not
+    // signed in" 401 gets stored, revalidates as a 304, and the browser
+    // replays the old 401 — which looks exactly like being logged straight
+    // back out after a successful sign-in.
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
     if (!isLoggedIn(req)) return res.status(401).json({ error: 'Not signed in' });
     return handler(req, res);
   };

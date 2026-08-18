@@ -1,6 +1,7 @@
 const { checkPassword, issueCookie, clearCookie, isLoggedIn } = require('../_lib/auth');
 
 module.exports = async (req, res) => {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
   // GET tells the admin page whether we are already signed in
   if (req.method === 'GET') return res.status(200).json({ signedIn: isLoggedIn(req) });
 

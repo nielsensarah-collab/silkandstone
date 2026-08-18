@@ -1,78 +1,40 @@
 # Silk & Stone
 
-Storefront at `/`, admin at `/admin`.
+Storefront at `/`, admin at `/admin.html`.
 
----
+## Environment variables (Vercel → Settings → Environments → Production)
 
-## What you need to add in Vercel
-
-Settings → Environments → **Production**. Three variables:
-
-| Name | Value |
+| Name | What it is |
 |---|---|
-| `STRIPE_SECRET_KEY` | already set — `sk_test_…` while testing, `sk_live_…` when real |
-| `ADMIN_PASSWORD` | whatever you want to type to get into the admin |
-| `SESSION_SECRET` | a long random string, 32+ characters — never typed by you, just needs to exist |
+| `STRIPE_SECRET_KEY` | `sk_test_…` while testing, `sk_live_…` when real |
+| `ADMIN_PASSWORD` | what you type to get into the admin |
+| `SESSION_SECRET` | long random string; signs your login cookie |
+| `BLOB_READ_WRITE_TOKEN` | added automatically when you connect Blob storage |
 
-For `SESSION_SECRET`, mash the keyboard or run `openssl rand -hex 32` in Terminal.
-It signs your login cookie. If you change it, everyone gets logged out — which is
-also how you kick out a session you're worried about.
+Environment variables only apply to deployments made *after* they are added, so
+redeploy whenever you change one.
 
-## One service to switch on
+## How it works
 
-The admin saves products and photos to **Vercel Blob**.
+Until you save in the admin, the shop shows the eleven pieces built into
+`index.html`. The first save writes them to Blob storage, and from then on that
+is the live catalogue — read by the storefront *and* by checkout.
 
-Vercel dashboard → **Storage** → **Create Database** → **Blob** → connect it to the
-`silk-and-stone` project. Vercel adds the `BLOB_READ_WRITE_TOKEN` variable itself;
-you don't copy anything. Free tier is far more than this shop needs.
+Prices are looked up on the server at checkout, never taken from the browser.
+So the price in the admin is exactly what Stripe charges, and unticking
+"In stock" genuinely blocks the sale even if the piece is already in a bag.
 
-Redeploy after adding variables — they only apply to new deployments.
-
----
-
-## How it hangs together
-
-**Until you save anything in the admin**, the shop shows the eleven pieces built
-into `index.html`, with the photos embedded in the page. Nothing breaks if Blob
-isn't set up yet.
-
-**The first time you press Save**, that catalogue is written to Blob as
-`products.json`. From then on it's the live source: the storefront reads it, and
-so does checkout.
-
-**Prices are read on the server.** When someone checks out, `api/checkout.js`
-looks the price up from the saved catalogue — never from the browser. So nobody
-can edit a price before paying, and the price you set in the admin is
-exactly what Stripe charges. No more keeping two files in step.
-
-**Photos you upload** are shrunk in your browser to 1400px, then stored in Blob
-and referenced by URL. The original eleven pieces still use photos embedded in
-the page; both work side by side. As you replace them with uploads, the page
-gets smaller and faster.
-
-**Sales figures come from Stripe**, not from any database here. Revenue, order
-count, average order, shipping collected, best sellers and shipping addresses
-are all read live, so they can't drift from the money that actually arrived.
-Fees are an estimate using Stripe's standard 2.9% + 30¢.
-
----
+Sales figures are read live from Stripe rather than stored here, so they can
+never drift from the money that actually arrived. Fees shown are an estimate
+at Stripe's standard 2.9% + 30¢.
 
 ## Marking something sold
 
 Admin → Products → open the piece → untick **In stock** → Save.
 
-It immediately shows "Sold out" on the site and can't be added to a bag, and
-checkout refuses it even if someone had it in their bag already. That last part
-matters: it's what stops two people buying the same one-of-a-kind necklace.
+## Security
 
-## Security notes
-
-- The admin page is one password. Fine for one person; if you ever add someone,
-  move to real accounts rather than sharing it.
-- Sessions last 12 hours, then you sign in again.
-- The login cookie is httpOnly and signed, so it can't be read or forged by a
-  page script.
-- Login has a deliberate delay, which makes bulk password guessing impractical.
-- `/admin` is marked noindex so it won't turn up in search results. That is not
-  security — the password is.
-- **Never put any of these values in the GitHub repo.** The repo is public.
+- One password protects the admin. Sessions last 12 hours.
+- The login cookie is httpOnly and signed, so page scripts cannot read or forge it.
+- Admin responses are sent `no-store` so no browser or CDN ever caches them.
+- Never commit any of these values to the repo. It is public.
