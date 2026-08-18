@@ -1,85 +1,78 @@
-# Silk & Stone — turning on Stripe
+# Silk & Stone
 
-The site works right now with Stripe switched off. Pick one of the two ways
-below. Everything you change lives near the top of `index.html`, in the block
-marked `const STRIPE = {`.
+Storefront at `/`, admin at `/admin`.
 
 ---
 
-## Option A — Payment Links (no server, ~15 minutes)
+## What you need to add in Vercel
 
-Best if you want to take money this week and don't mind buyers paying for one
-piece at a time.
+Settings → Environments → **Production**. Three variables:
 
-1. Make a Stripe account at stripe.com and finish the details it asks for
-   (bank account, ID). Payouts start once that's approved.
-2. Go to **Payment links → New**. Create one link per piece, using the same
-   name and price as the site.
-3. Copy each link into `index.html`:
+| Name | Value |
+|---|---|
+| `STRIPE_SECRET_KEY` | already set — `sk_test_…` while testing, `sk_live_…` when real |
+| `ADMIN_PASSWORD` | whatever you want to type to get into the admin |
+| `SESSION_SECRET` | a long random string, 32+ characters — never typed by you, just needs to exist |
 
-   ```js
-   const STRIPE = {
-     mode: 'links',
-     links: {
-       grn: 'https://buy.stripe.com/xxxx',   // Green & red beaded necklace
-       mlt: 'https://buy.stripe.com/xxxx',   // Color block necklace
-       crd: 'https://buy.stripe.com/xxxx',   // Red cord charm necklace
-       amb: 'https://buy.stripe.com/xxxx',   // Amber fish bracelet
-       lem: 'https://buy.stripe.com/xxxx',   // Lemon fish bracelet
-       pb:  'https://buy.stripe.com/xxxx',   // Paracord bracelet
-       phn: 'https://buy.stripe.com/xxxx'    // Paracord heart necklace
-     },
-     ...
-   };
-   ```
+For `SESSION_SECRET`, mash the keyboard or run `openssl rand -hex 32` in Terminal.
+It signs your login cookie. If you change it, everyone gets logged out — which is
+also how you kick out a session you're worried about.
 
-4. Change `mode` to `'links'`. Each item in the bag now gets its own Pay
-   button. Turn on "Collect shipping address" inside each Payment Link.
+## One service to switch on
 
-**Trade-off:** someone buying three pieces pays three times.
+The admin saves products and photos to **Vercel Blob**.
+
+Vercel dashboard → **Storage** → **Create Database** → **Blob** → connect it to the
+`silk-and-stone` project. Vercel adds the `BLOB_READ_WRITE_TOKEN` variable itself;
+you don't copy anything. Free tier is far more than this shop needs.
+
+Redeploy after adding variables — they only apply to new deployments.
 
 ---
 
-## Option B — Real checkout (one cart, one payment)
+## How it hangs together
 
-Needs the site hosted somewhere that runs the `api/checkout.js` function.
-Vercel is free for this.
+**Until you save anything in the admin**, the shop shows the eleven pieces built
+into `index.html`, with the photos embedded in the page. Nothing breaks if Blob
+isn't set up yet.
 
-1. In `index.html`, set `mode: 'server'`.
-2. Deploy this whole folder to Vercel (`vercel deploy`, or drag the folder in
-   at vercel.com/new).
-3. In Vercel: **Settings → Environment Variables**, add
+**The first time you press Save**, that catalogue is written to Blob as
+`products.json`. From then on it's the live source: the storefront reads it, and
+so does checkout.
 
-   ```
-   STRIPE_SECRET_KEY = sk_live_...
-   ```
+**Prices are read on the server.** When someone checks out, `api/checkout.js`
+looks the price up from the saved catalogue — never from the browser. So nobody
+can edit a price before paying, and the price you set in the admin is
+exactly what Stripe charges. No more keeping two files in step.
 
-   Get that from Stripe under **Developers → API keys**. Use the test key
-   (`sk_test_...`) first — test card `4242 4242 4242 4242`, any future expiry.
-4. Redeploy. The Check out button now builds a Stripe checkout with every
-   piece in the bag, collects a shipping address and phone number, and sends
-   the buyer back to the site afterwards.
+**Photos you upload** are shrunk in your browser to 1400px, then stored in Blob
+and referenced by URL. The original eleven pieces still use photos embedded in
+the page; both work side by side. As you replace them with uploads, the page
+gets smaller and faster.
 
-### Important
-
-- **Never put the secret key in `index.html`.** It belongs only in the Vercel
-  environment variable. Anyone with that key can move money in your account.
-- Prices are set in `api/checkout.js`, not in the browser. That's deliberate —
-  it stops anyone editing a price before paying. **When you change a price on
-  the site, change it in `api/checkout.js` too**, or you'll charge the old one.
-- Shipping is a flat $5 in `api/checkout.js` (`SHIPPING`). Set it to `null`
-  for no shipping.
-- The buyer's note arrives on the payment in Stripe under **Metadata → note**.
+**Sales figures come from Stripe**, not from any database here. Revenue, order
+count, average order, shipping collected, best sellers and shipping addresses
+are all read live, so they can't drift from the money that actually arrived.
+Fees are an estimate using Stripe's standard 2.9% + 30¢.
 
 ---
 
-## Editing the shop
+## Marking something sold
 
-All in `index.html`:
+Admin → Products → open the piece → untick **In stock** → Save.
 
-- `PRODUCTS` — names, prices, descriptions, which photos, and `inStock`.
-  Set `inStock: false` and the piece shows "Sold out" and can't be added.
-- `isNew: true` puts a piece in the What's New collection.
-- `COLLECTIONS` — the menu and collection pages.
+It immediately shows "Sold out" on the site and can't be added to a bag, and
+checkout refuses it even if someone had it in their bag already. That last part
+matters: it's what stops two people buying the same one-of-a-kind necklace.
 
-Photos are embedded in the file itself, so there's nothing else to upload.
+## Security notes
+
+- The admin page is one password. Fine for one person; if you ever add someone,
+  move to real accounts rather than sharing it.
+- Sessions last 12 hours, then you sign in again.
+- The login cookie is httpOnly and signed, so it can't be read or forged by a
+  page script.
+- Login has a deliberate delay, which makes bulk password guessing impractical.
+- `/admin` is marked noindex so it won't turn up in search results. That is not
+  security — the password is.
+- **Never put any of these values in the GitHub repo.** The repo is public.

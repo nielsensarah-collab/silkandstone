@@ -567,8 +567,11 @@ const STRIPE = {
 let col = 'whats-new', sort = 'featured', query = '';
 const filt = { inStock:false, outStock:false, min:null, max:null };
 const bag = {};
-const photoOf = p => p.photos.length ? IMG[p.photos[0]] : NOPHOTO;
-const altOf   = p => p.photos.length > 1 ? IMG[p.photos[1]] : null;
+// A photo is either a key into the images built into this page, or a URL
+// uploaded through the admin. Resolve both the same way.
+const src = k => !k ? null : (/^https?:\/\//.test(k) ? k : (IMG[k] || null));
+const photoOf = p => src((p.photos || [])[0]) || NOPHOTO;
+const altOf   = p => src((p.photos || [])[1]);
 const money   = n => '$' + n;
 
 function inCollection(p, c){
@@ -676,7 +679,7 @@ function openPDP(id){
   document.getElementById('pPrev').hidden = !many;
   document.getElementById('pNext').hidden = !many;
   document.getElementById('pThumbs').innerHTML = p.photos.map((k,i) =>
-    `<button data-i="${i}" aria-current="${i === 0}" aria-label="Photo ${i+1}"><img src="${IMG[k]}" alt=""></button>`).join('');
+    `<button data-i="${i}" aria-current="${i === 0}" aria-label="Photo ${i+1}"><img src="${src(k)}" alt=""></button>`).join('');
   showPhoto(0);
   document.getElementById('qVal').textContent = qty;
   const atc = document.getElementById('pAdd');
@@ -692,7 +695,7 @@ function showPhoto(i){
   const big = document.getElementById('pBig');
   if(!n){ big.src = NOPHOTO; big.alt = cur.title; return; }
   idx = (i + n) % n;
-  big.src = IMG[cur.photos[idx]];
+  big.src = src(cur.photos[idx]) || NOPHOTO;
   big.alt = cur.title + ', photo ' + (idx + 1);
   document.querySelectorAll('#pThumbs button').forEach(b => b.setAttribute('aria-current', b.dataset.i == idx));
 }
@@ -892,6 +895,22 @@ const start = location.hash.replace('#','');
 setCollection(COLLECTIONS.some(c => c.id === start) ? start : 'whats-new');
 initStripe();
 renderBag();
+
+// Load the catalogue the shop owner has saved. If that is unavailable for any
+// reason, the pieces baked into this page above are shown instead, so the shop
+// never comes up empty.
+(async () => {
+  try {
+    const r = await fetch('/api/products', { cache: 'no-store' });
+    if (!r.ok) return;
+    const d = await r.json();
+    if (!Array.isArray(d.products) || !d.products.length) return;
+    PRODUCTS.length = 0;
+    d.products.forEach(p => PRODUCTS.push(p));
+    setCollection(active, false);
+    renderBag();
+  } catch (err) { /* keep the built-in catalogue */ }
+})();
 
 if(new URLSearchParams(location.search).get('paid') === '1'){
   Object.keys(bag).forEach(k => delete bag[k]);

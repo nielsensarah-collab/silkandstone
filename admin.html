@@ -1,0 +1,529 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Silk &amp; Stone — Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=Karla:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --paper:#FDFAF6; --cream:#F6EFE6; --clay:#BC6F46; --sage:#77886F; --ink:#2A2622;
+    --muted:#8B8178; --line:#E6DED3; --hair:#D9CDBE; --bad:#B4432E;
+    --serif:'Cormorant Garamond',Georgia,serif; --sans:'Karla',-apple-system,sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.55}
+  img{display:block;max-width:100%}
+  button,input,textarea,select{font-family:inherit;font-size:inherit;color:inherit}
+  .wrap{max-width:1180px;margin:0 auto;padding:0 clamp(16px,4vw,36px)}
+  .micro{font-size:10px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:var(--muted)}
+  .amp{font-style:italic;color:var(--clay)}
+  :focus-visible{outline:2px solid var(--sage);outline-offset:2px}
+
+  .btn{background:var(--ink);color:var(--paper);border:1px solid var(--ink);border-radius:2px;cursor:pointer;
+    padding:11px 20px;font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;transition:background .2s}
+  .btn:hover{background:#3b352f}
+  .btn.ghost{background:none;color:var(--ink);border-color:var(--hair)}
+  .btn.ghost:hover{background:var(--cream)}
+  .btn.clay{background:var(--clay);border-color:var(--clay)}
+  .btn.danger{background:none;color:var(--bad);border-color:#E3C6BE}
+  .btn[disabled]{opacity:.45;pointer-events:none}
+  .btn.sm{padding:7px 13px;font-size:10px}
+
+  /* login */
+  .gate{min-height:100vh;display:grid;place-items:center;padding:24px}
+  .gate .card{width:100%;max-width:380px;text-align:center}
+  .gate h1{font-family:var(--serif);font-weight:400;font-size:44px;margin:16px 0 6px}
+  .gate p{color:var(--muted);margin:0 0 26px;font-size:14px}
+  .gate input{width:100%;padding:13px 14px;border:1px solid var(--line);border-radius:2px;background:#fff;margin-bottom:12px}
+  .gate input:focus{outline:none;border-color:var(--sage)}
+  .gate .btn{width:100%}
+  .err{color:var(--bad);font-size:13.5px;margin-top:12px;min-height:20px}
+
+  /* shell */
+  header.bar{border-bottom:1px solid var(--line);background:rgba(253,250,246,.95);
+    position:sticky;top:0;z-index:20;backdrop-filter:blur(8px)}
+  .bar-in{display:flex;align-items:center;gap:18px;padding:14px 0}
+  .bar .name{font-family:var(--serif);font-size:24px}
+  .tabs{display:flex;gap:4px;margin-left:auto}
+  .tab{background:none;border:0;cursor:pointer;padding:9px 14px;border-radius:2px;
+    font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+  .tab[aria-selected="true"]{background:var(--ink);color:var(--paper)}
+  .panel{padding:clamp(24px,4vw,40px) 0}
+  .panel[hidden]{display:none}
+
+  h2.sec{font-family:var(--serif);font-weight:400;font-size:32px;margin:0 0 4px}
+  .sub{color:var(--muted);font-size:14px;margin:0 0 26px}
+
+  /* stats */
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:30px}
+  .kpi{background:#fff;border:1px solid var(--line);border-radius:3px;padding:18px 20px}
+  .kpi .v{font-size:30px;font-weight:700;letter-spacing:-.02em;line-height:1.1;margin:6px 0 2px}
+  .kpi .n{font-size:12px;color:var(--muted)}
+  .chart{background:#fff;border:1px solid var(--line);border-radius:3px;padding:20px;margin-bottom:26px}
+  .bars{display:flex;align-items:flex-end;gap:3px;height:150px;margin-top:14px}
+  .bars div{flex:1;background:var(--sage);border-radius:1px 1px 0 0;min-height:2px;position:relative}
+  .bars div:hover{background:var(--clay)}
+  table{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--line);border-radius:3px}
+  th{text-align:left;font-size:10px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--muted);padding:12px 14px;border-bottom:1px solid var(--line)}
+  td{padding:12px 14px;border-bottom:1px solid var(--line);font-size:14px;vertical-align:top}
+  tr:last-child td{border-bottom:0}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+  @media(max-width:860px){.two{grid-template-columns:1fr}}
+  .flag{display:inline-block;background:var(--cream);border:1px solid var(--hair);border-radius:2px;
+    padding:3px 8px;font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+
+  /* products */
+  .plist{display:flex;flex-direction:column;gap:12px}
+  .prow{background:#fff;border:1px solid var(--line);border-radius:3px}
+  .phead{display:flex;align-items:center;gap:14px;padding:12px 14px;cursor:pointer}
+  .phead img,.phead .noimg{width:52px;height:64px;object-fit:cover;border:1px solid var(--line);
+    border-radius:2px;background:var(--cream);flex:0 0 auto}
+  .phead .t{font-family:var(--serif);font-size:20px;line-height:1.15}
+  .phead .m{font-size:12.5px;color:var(--muted)}
+  .phead .price{margin-left:auto;font-weight:700;font-size:17px}
+  .pbody{padding:4px 14px 18px;border-top:1px solid var(--line)}
+  .pbody[hidden]{display:none}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media(max-width:700px){.grid2{grid-template-columns:1fr}}
+  label.f{display:block;margin-top:14px}
+  label.f > span{display:block;font-size:10px;font-weight:600;letter-spacing:.16em;
+    text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+  input.t,textarea.t,select.t{width:100%;padding:10px 12px;border:1px solid var(--line);
+    border-radius:2px;background:var(--paper)}
+  input.t:focus,textarea.t:focus,select.t:focus{outline:none;border-color:var(--sage);background:#fff}
+  textarea.t{resize:vertical;min-height:88px}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+  .chip{display:flex;align-items:center;gap:6px;font-size:12.5px;background:var(--cream);
+    border:1px solid var(--hair);border-radius:2px;padding:6px 10px;cursor:pointer}
+  .chip input{accent-color:var(--sage)}
+  .shots{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px}
+  .shot{position:relative;width:74px;height:92px;border:1px solid var(--line);border-radius:2px;overflow:hidden;background:var(--cream)}
+  .shot img{width:100%;height:100%;object-fit:cover}
+  .shot .k{position:absolute;inset:auto 0 0 0;background:rgba(42,38,34,.75);color:#fff;
+    font-size:9px;text-align:center;padding:2px}
+  .shot button{position:absolute;top:2px;right:2px;background:rgba(253,250,246,.95);border:0;
+    border-radius:50%;width:20px;height:20px;cursor:pointer;font-size:12px;line-height:1}
+  .rowbtns{display:flex;gap:8px;flex-wrap:wrap;margin-top:18px;align-items:center}
+  .savebar{position:sticky;bottom:0;background:rgba(253,250,246,.96);backdrop-filter:blur(8px);
+    border-top:1px solid var(--line);padding:14px 0;margin-top:22px;display:flex;gap:12px;align-items:center}
+  .status{font-size:13px;color:var(--muted)}
+  .status.ok{color:var(--sage);font-weight:600}
+  .status.bad{color:var(--bad);font-weight:600}
+  .spec-row{display:grid;grid-template-columns:150px 1fr 32px;gap:8px;margin-top:8px}
+  .spec-row button{background:none;border:0;color:var(--muted);cursor:pointer;font-size:16px}
+  .empty{color:var(--muted);font-family:var(--serif);font-style:italic;font-size:19px;padding:36px 0;text-align:center}
+  .note{background:var(--cream);border:1px solid var(--hair);border-radius:3px;padding:14px 16px;
+    font-size:13.5px;color:#5B534B;margin-bottom:22px}
+</style>
+
+<!-- ============ LOGIN ============ -->
+<div class="gate" id="gate">
+  <div class="card">
+    <svg width="46" height="46" viewBox="0 0 40 40" style="margin:0 auto">
+      <circle cx="20" cy="13" r="8.5" fill="#77886F"/>
+      <path d="M5 26c4-4.5 7 4.5 11 0s7 4.5 11 0 4.5 0 6.5 2.4" stroke="#BC6F46" stroke-width="2" fill="none" stroke-linecap="round"/>
+    </svg>
+    <h1>Silk <span class="amp">&amp;</span> Stone</h1>
+    <p class="micro">Shop admin</p>
+    <div style="margin-top:26px">
+      <input id="pw" type="password" placeholder="Password" autocomplete="current-password">
+      <button class="btn" id="signin">Sign in</button>
+      <div class="err" id="loginErr"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ APP ============ -->
+<div id="app" hidden>
+  <header class="bar">
+    <div class="wrap bar-in">
+      <span class="name">Silk <span class="amp">&amp;</span> Stone</span>
+      <span class="micro">Admin</span>
+      <div class="tabs">
+        <button class="tab" data-tab="sales" aria-selected="true">Sales</button>
+        <button class="tab" data-tab="products" aria-selected="false">Products</button>
+        <button class="tab" data-tab="orders" aria-selected="false">Orders</button>
+      </div>
+      <button class="btn ghost sm" id="signout">Sign out</button>
+    </div>
+  </header>
+
+  <!-- SALES -->
+  <section class="panel wrap" id="panel-sales">
+    <h2 class="sec">Sales</h2>
+    <p class="sub" id="salesSub">Figures come straight from Stripe, so they always match the money that arrived.</p>
+    <div style="margin-bottom:20px">
+      <select class="t" id="range" style="width:auto;display:inline-block">
+        <option value="7">Last 7 days</option>
+        <option value="30">Last 30 days</option>
+        <option value="90" selected>Last 90 days</option>
+        <option value="365">Last year</option>
+      </select>
+    </div>
+    <div class="kpis" id="kpis"></div>
+    <div class="chart" id="chartBox"></div>
+    <div class="two">
+      <div>
+        <h3 class="micro" style="margin-bottom:10px">Best sellers</h3>
+        <table id="topTable"><tbody><tr><td class="empty">No sales yet</td></tr></tbody></table>
+      </div>
+      <div>
+        <h3 class="micro" style="margin-bottom:10px">Where orders ship</h3>
+        <table id="geoTable"><tbody><tr><td class="empty">No sales yet</td></tr></tbody></table>
+      </div>
+    </div>
+  </section>
+
+  <!-- PRODUCTS -->
+  <section class="panel wrap" id="panel-products" hidden>
+    <h2 class="sec">Products</h2>
+    <p class="sub">Edit prices, descriptions and photos. Changes go live the moment you save — including the price Stripe charges.</p>
+    <div class="note" id="sourceNote"></div>
+    <div class="plist" id="plist"></div>
+    <div class="rowbtns"><button class="btn ghost" id="addProduct">Add a piece</button></div>
+    <div class="savebar">
+      <button class="btn clay" id="saveAll">Save changes</button>
+      <button class="btn ghost sm" id="reload">Discard</button>
+      <span class="status" id="saveStatus"></span>
+    </div>
+  </section>
+
+  <!-- ORDERS -->
+  <section class="panel wrap" id="panel-orders" hidden>
+    <h2 class="sec">Orders</h2>
+    <p class="sub">The most recent orders, with the address each one ships to.</p>
+    <table id="ordersTable"><tbody><tr><td class="empty">No orders yet</td></tr></tbody></table>
+  </section>
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+const money = n => '$' + Number(n || 0).toFixed(2);
+const api = async (url, opts) => {
+  const r = await fetch(url, { credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, ...opts });
+  const data = await r.json().catch(() => ({}));
+  if (r.status === 401) { show(false); throw new Error('Signed out'); }
+  if (!r.ok) throw new Error(data.error || 'Something went wrong');
+  return data;
+};
+
+/* ---------- collections ---------- */
+const COLLECTIONS = [
+  { id:'necklaces', label:'Necklaces' },
+  { id:'bracelets', label:'Bracelets' },
+  { id:'beaded',    label:'Beaded' },
+  { id:'paracord',  label:'Paracord' }
+];
+
+/* ---------- login ---------- */
+function show(signedIn){
+  $('#gate').hidden = signedIn;
+  $('#app').hidden = !signedIn;
+  if (signedIn) { loadStats(); loadProducts(); }
+}
+async function signIn(){
+  const btn = $('#signin');
+  btn.disabled = true; $('#loginErr').textContent = '';
+  try {
+    await api('/api/admin/login', { method:'POST', body: JSON.stringify({ password: $('#pw').value }) });
+    $('#pw').value = '';
+    show(true);
+  } catch (err) {
+    $('#loginErr').textContent = err.message;
+  }
+  btn.disabled = false;
+}
+$('#signin').addEventListener('click', signIn);
+$('#pw').addEventListener('keydown', e => { if (e.key === 'Enter') signIn(); });
+$('#signout').addEventListener('click', async () => {
+  await fetch('/api/admin/login', { method:'DELETE', credentials:'same-origin' });
+  show(false);
+});
+
+/* ---------- tabs ---------- */
+document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => {
+  document.querySelectorAll('.tab').forEach(x => x.setAttribute('aria-selected', x === t));
+  ['sales','products','orders'].forEach(n => { $('#panel-' + n).hidden = n !== t.dataset.tab; });
+}));
+
+/* ---------- sales ---------- */
+let statsCache = null;
+
+async function loadStats(){
+  const days = $('#range').value;
+  $('#kpis').innerHTML = '<div class="kpi"><div class="n">Loading…</div></div>';
+  try {
+    const d = await api('/api/admin/stats?days=' + days);
+    statsCache = d;
+    if (!d.configured) {
+      $('#kpis').innerHTML = '<div class="kpi"><div class="n">Stripe is not connected yet</div></div>';
+      return;
+    }
+    const t = d.totals;
+    $('#salesSub').innerHTML = 'Figures come straight from Stripe, so they always match the money that arrived.' +
+      (d.testMode === true ? ' <span class="flag">Test mode data</span>' : '');
+    $('#kpis').innerHTML = `
+      ${kpi('Total revenue', money(t.revenue), 'Gross, before fees')}
+      ${kpi('Orders', t.orders, 'Paid checkouts')}
+      ${kpi('Average order', money(t.averageOrder), 'Revenue ÷ orders')}
+      ${kpi('Shipping collected', money(t.shipping), 'Included in revenue')}
+      ${kpi('Estimated fees', money(t.estimatedFees), 'Stripe 2.9% + 30¢')}
+      ${kpi('Estimated net', money(t.estimatedNet), 'What reaches your bank')}`;
+    drawChart(d.series);
+    $('#topTable').innerHTML = d.topItems.length
+      ? '<thead><tr><th>Piece</th><th>Units</th><th>Revenue</th></tr></thead><tbody>' +
+        d.topItems.map(i => `<tr><td>${esc(i.name)}</td><td>${i.units}</td><td>${money(i.revenue)}</td></tr>`).join('') + '</tbody>'
+      : '<tbody><tr><td class="empty">No sales yet</td></tr></tbody>';
+    $('#geoTable').innerHTML = d.shipsTo.length
+      ? '<thead><tr><th>State</th><th>Orders</th></tr></thead><tbody>' +
+        d.shipsTo.map(s => `<tr><td>${esc(s.state)}</td><td>${s.count}</td></tr>`).join('') + '</tbody>'
+      : '<tbody><tr><td class="empty">No sales yet</td></tr></tbody>';
+    $('#ordersTable').innerHTML = d.recent.length
+      ? '<thead><tr><th>Date</th><th>Total</th><th>Ship to</th><th>Contact</th><th>Note</th></tr></thead><tbody>' +
+        d.recent.map(o => `<tr>
+            <td>${new Date(o.date).toLocaleDateString()}</td>
+            <td><strong>${money(o.total)}</strong><br><span class="n" style="color:var(--muted);font-size:12px">${money(o.shipping)} ship</span></td>
+            <td>${esc(o.name)}<br><span style="color:var(--muted);font-size:12.5px">${esc(o.address)}</span></td>
+            <td style="font-size:12.5px">${esc(o.email)}<br>${esc(o.phone)}</td>
+            <td style="font-size:12.5px;color:var(--muted)">${esc(o.note)}</td>
+          </tr>`).join('') + '</tbody>'
+      : '<tbody><tr><td class="empty">No orders yet</td></tr></tbody>';
+  } catch (err) {
+    $('#kpis').innerHTML = `<div class="kpi"><div class="n">${esc(err.message)}</div></div>`;
+  }
+}
+const kpi = (n, v, s) => `<div class="kpi"><div class="n">${n}</div><div class="v">${v}</div><div class="n">${s}</div></div>`;
+const esc = s => String(s || '').replace(/[<>&"]/g, c => ({ '<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;' }[c]));
+
+function drawChart(series){
+  if (!series.length) { $('#chartBox').innerHTML = '<div class="empty">No sales in this period</div>'; return; }
+  const max = Math.max(...series.map(d => d.revenue));
+  $('#chartBox').innerHTML = `<div class="micro">Revenue by day</div><div class="bars">` +
+    series.map(d => `<div style="height:${Math.max(2, (d.revenue / max) * 100)}%" title="${d.date}: ${money(d.revenue)} (${d.orders} orders)"></div>`).join('') +
+    `</div><div class="micro" style="display:flex;justify-content:space-between;margin-top:8px">
+      <span>${series[0].date}</span><span>peak ${money(max)}</span><span>${series[series.length-1].date}</span></div>`;
+}
+$('#range').addEventListener('change', loadStats);
+
+/* ---------- products ---------- */
+let products = [];
+
+async function loadProducts(){
+  try {
+    const d = await api('/api/admin/products');
+    products = d.products;
+    $('#sourceNote').textContent = d.source === 'blob'
+      ? 'Editing your saved catalogue.'
+      : 'Showing the built-in catalogue. The first time you save, it becomes editable storage.';
+    renderProducts();
+  } catch (err) {
+    $('#plist').innerHTML = `<div class="empty">${esc(err.message)}</div>`;
+  }
+}
+
+function thumb(p){
+  const first = (p.photos || [])[0];
+  if (first && /^https?:\/\//.test(first)) return `<img src="${esc(first)}" alt="">`;
+  return `<div class="noimg"></div>`;
+}
+
+function renderProducts(){
+  $('#plist').innerHTML = products.map((p, i) => `
+    <div class="prow" data-i="${i}">
+      <div class="phead" data-toggle="${i}">
+        ${thumb(p)}
+        <div>
+          <div class="t">${esc(p.title) || '<em>Untitled</em>'}</div>
+          <div class="m">${esc(p.id)} · ${p.inStock === false ? 'Sold out' : 'In stock'}${p.isNew ? ' · New' : ''}</div>
+        </div>
+        <div class="price">${money(p.price)}</div>
+      </div>
+      <div class="pbody" hidden>
+        <div class="grid2">
+          <label class="f"><span>Name</span><input class="t" data-k="title" value="${esc(p.title)}"></label>
+          <label class="f"><span>Price (USD)</span><input class="t" data-k="price" type="number" min="0" step="0.01" value="${Number(p.price)}"></label>
+        </div>
+        <div class="grid2">
+          <label class="f"><span>ID (used by checkout — avoid changing)</span><input class="t" data-k="id" value="${esc(p.id)}"></label>
+          <label class="f"><span>Colourway line</span><input class="t" data-k="swatch" value="${esc(p.swatch)}"></label>
+        </div>
+        <label class="f"><span>Description</span><textarea class="t" data-k="desc">${esc(p.desc)}</textarea></label>
+
+        <label class="f"><span>Collections</span></label>
+        <div class="chips">
+          ${COLLECTIONS.map(c => `<label class="chip"><input type="checkbox" data-col="${c.id}" ${(p.cols||[]).includes(c.id) ? 'checked' : ''}> ${c.label}</label>`).join('')}
+          <label class="chip"><input type="checkbox" data-k="isNew" ${p.isNew ? 'checked' : ''}> What's New</label>
+          <label class="chip"><input type="checkbox" data-k="inStock" ${p.inStock !== false ? 'checked' : ''}> In stock</label>
+        </div>
+
+        <label class="f"><span>Details table</span></label>
+        <div data-specs>
+          ${(p.spec || []).map((r, j) => specRow(r, j)).join('')}
+        </div>
+        <button class="btn ghost sm" data-addspec style="margin-top:8px">Add a row</button>
+
+        <label class="f"><span>Photos</span></label>
+        <div class="shots">
+          ${(p.photos || []).map((ph, j) => `
+            <div class="shot">
+              ${/^https?:\/\//.test(ph) ? `<img src="${esc(ph)}" alt="">` : `<div class="k" style="position:static;padding:30px 4px;color:var(--muted);background:none">${esc(ph)}</div>`}
+              <button data-rmphoto="${j}" title="Remove">×</button>
+            </div>`).join('')}
+        </div>
+        <div class="rowbtns">
+          <label class="btn ghost sm" style="cursor:pointer">
+            Upload photo<input type="file" accept="image/*" data-upload hidden multiple>
+          </label>
+          <span class="status" data-upstatus></span>
+        </div>
+
+        <div class="rowbtns">
+          <button class="btn danger sm" data-delete>Delete this piece</button>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+const specRow = (r, j) => `<div class="spec-row" data-spec="${j}">
+    <input class="t" data-sk="0" value="${esc(r[0])}" placeholder="Label">
+    <input class="t" data-sk="1" value="${esc(r[1])}" placeholder="Value">
+    <button data-rmspec="${j}" title="Remove">×</button>
+  </div>`;
+
+// read every field of a row back into the product object
+function collect(rowEl, i){
+  const p = products[i];
+  rowEl.querySelectorAll('[data-k]').forEach(el => {
+    const k = el.dataset.k;
+    if (el.type === 'checkbox') p[k] = el.checked;
+    else if (k === 'price') p[k] = Math.max(0, Number(el.value) || 0);
+    else p[k] = el.value;
+  });
+  p.cols = [...rowEl.querySelectorAll('[data-col]')].filter(c => c.checked).map(c => c.dataset.col);
+  p.spec = [...rowEl.querySelectorAll('[data-spec]')].map(r => [
+    r.querySelector('[data-sk="0"]').value, r.querySelector('[data-sk="1"]').value
+  ]).filter(r => r[0] || r[1]);
+}
+
+$('#plist').addEventListener('click', async e => {
+  const row = e.target.closest('.prow');
+  if (!row) return;
+  const i = +row.dataset.i;
+
+  if (e.target.closest('[data-toggle]')) {
+    const body = row.querySelector('.pbody');
+    body.hidden = !body.hidden;
+    return;
+  }
+  if (e.target.closest('[data-addspec]')) {
+    collect(row, i);
+    products[i].spec = [...(products[i].spec || []), ['', '']];
+    const box = row.querySelector('[data-specs]');
+    box.insertAdjacentHTML('beforeend', specRow(['', ''], products[i].spec.length - 1));
+    return;
+  }
+  const rmSpec = e.target.closest('[data-rmspec]');
+  if (rmSpec) { rmSpec.closest('[data-spec]').remove(); return; }
+
+  const rmPhoto = e.target.closest('[data-rmphoto]');
+  if (rmPhoto) {
+    collect(row, i);
+    products[i].photos.splice(+rmPhoto.dataset.rmphoto, 1);
+    renderProducts();
+    document.querySelector(`.prow[data-i="${i}"] .pbody`).hidden = false;
+    return;
+  }
+  if (e.target.closest('[data-delete]')) {
+    if (!confirm(`Delete "${products[i].title}"? This cannot be undone once you save.`)) return;
+    products.splice(i, 1);
+    renderProducts();
+    return;
+  }
+});
+
+// photo upload: shrink in the browser first so uploads stay small and fast
+$('#plist').addEventListener('change', async e => {
+  const input = e.target.closest('[data-upload]');
+  if (!input) return;
+  const row = e.target.closest('.prow');
+  const i = +row.dataset.i;
+  const status = row.querySelector('[data-upstatus]');
+  collect(row, i);
+
+  for (const file of input.files) {
+    status.textContent = `Uploading ${file.name}…`;
+    try {
+      const data = await shrink(file);
+      const out = await api('/api/admin/upload', {
+        method: 'POST',
+        body: JSON.stringify({ filename: file.name.replace(/\.[^.]+$/, '.jpg'), data })
+      });
+      products[i].photos = [...(products[i].photos || []), out.url];
+      status.textContent = 'Uploaded';
+    } catch (err) {
+      status.textContent = err.message;
+      status.className = 'status bad';
+    }
+  }
+  renderProducts();
+  document.querySelector(`.prow[data-i="${i}"] .pbody`).hidden = false;
+});
+
+function shrink(file, max = 1400, quality = 0.82){
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const reader = new FileReader();
+    reader.onload = () => { img.src = reader.result; };
+    reader.onerror = () => reject(new Error('Could not read that file'));
+    img.onload = () => {
+      const scale = Math.min(1, max / Math.max(img.width, img.height));
+      const c = document.createElement('canvas');
+      c.width = Math.round(img.width * scale);
+      c.height = Math.round(img.height * scale);
+      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+      resolve(c.toDataURL('image/jpeg', quality));
+    };
+    img.onerror = () => reject(new Error('That file is not an image'));
+    reader.readAsDataURL(file);
+  });
+}
+
+$('#addProduct').addEventListener('click', () => {
+  products.push({
+    id: 'new' + Math.random().toString(36).slice(2, 6),
+    title: 'New piece', price: 20, inStock: true, isNew: true,
+    cols: ['necklaces'], swatch: '', desc: '',
+    spec: [['Hardware', 'Tarnish-free, made for regular wear']], photos: []
+  });
+  renderProducts();
+  const last = document.querySelector('.prow:last-child .pbody');
+  if (last) { last.hidden = false; last.scrollIntoView({ block: 'center', behavior: 'smooth' }); }
+});
+
+$('#saveAll').addEventListener('click', async () => {
+  document.querySelectorAll('.prow').forEach(row => collect(row, +row.dataset.i));
+  const s = $('#saveStatus');
+  s.className = 'status'; s.textContent = 'Saving…';
+  try {
+    const out = await api('/api/admin/products', { method: 'PUT', body: JSON.stringify({ products }) });
+    s.className = 'status ok';
+    s.textContent = `Saved — ${out.count} pieces are live`;
+    loadProducts();
+  } catch (err) {
+    s.className = 'status bad';
+    s.textContent = err.message;
+  }
+});
+$('#reload').addEventListener('click', loadProducts);
+
+/* ---------- start ---------- */
+(async () => {
+  try {
+    const d = await fetch('/api/admin/login', { credentials: 'same-origin' }).then(r => r.json());
+    show(!!d.signedIn);
+  } catch (err) { show(false); }
+})();
+</script>
