@@ -14,6 +14,10 @@
     --serif:'Cormorant Garamond',Georgia,serif; --sans:'Karla',-apple-system,sans-serif;
   }
   *{box-sizing:border-box}
+  /* The hidden attribute hides by setting display:none, which any author
+     display rule beats. Without this, .gate{display:grid} kept the login
+     panel on screen after sign-in and the admin rendered below the fold. */
+  [hidden]{display:none !important}
   body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.55}
   img{display:block;max-width:100%}
   button,input,textarea,select{font-family:inherit;font-size:inherit;color:inherit}
@@ -128,7 +132,7 @@
       <path d="M5 26c4-4.5 7 4.5 11 0s7 4.5 11 0 4.5 0 6.5 2.4" stroke="#BC6F46" stroke-width="2" fill="none" stroke-linecap="round"/>
     </svg>
     <h1>Silk <span class="amp">&amp;</span> Stone</h1>
-    <p class="micro">Shop admin · v3</p>
+    <p class="micro">Shop admin · v4</p>
     <div style="margin-top:26px">
       <input id="pw" type="password" placeholder="Password" autocomplete="current-password">
       <button class="btn" id="signin">Sign in</button>
@@ -142,7 +146,7 @@
   <header class="bar">
     <div class="wrap bar-in">
       <span class="name">Silk <span class="amp">&amp;</span> Stone</span>
-      <span class="micro">Admin · v3</span>
+      <span class="micro">Admin · v4</span>
       <div class="tabs">
         <button class="tab" data-tab="sales" aria-selected="true">Sales</button>
         <button class="tab" data-tab="products" aria-selected="false">Products</button>
