@@ -131,7 +131,7 @@
       <path d="M5 26c4-4.5 7 4.5 11 0s7 4.5 11 0 4.5 0 6.5 2.4" stroke="#BC6F46" stroke-width="2" fill="none" stroke-linecap="round"/>
     </svg>
     <h1>Silk <span class="amp">&amp;</span> Stone</h1>
-    <p class="micro">Shop admin · v5</p>
+    <p class="micro">Shop admin · v6</p>
     <div style="margin-top:26px">
       <input id="pw" type="password" placeholder="Password" autocomplete="current-password">
       <button class="btn" id="signin">Sign in</button>
@@ -145,7 +145,7 @@
   <header class="bar">
     <div class="wrap bar-in">
       <span class="name">Silk <span class="amp">&amp;</span> Stone</span>
-      <span class="micro">Admin · v5</span>
+      <span class="micro">Admin · v6</span>
       <div class="tabs">
         <button class="tab" data-tab="sales" aria-selected="true">Sales</button>
         <button class="tab" data-tab="products" aria-selected="false">Products</button>
@@ -364,21 +364,6 @@ function renderProducts(){
           <label class="f"><span>ID (used by checkout — avoid changing)</span><input class="t" data-k="id" value="${esc(p.id)}"></label>
           <label class="f"><span>Colourway line</span><input class="t" data-k="swatch" value="${esc(p.swatch)}"></label>
         </div>
-        <label class="f"><span>Description</span><textarea class="t" data-k="desc">${esc(p.desc)}</textarea></label>
-
-        <label class="f"><span>Collections</span></label>
-        <div class="chips">
-          ${COLLECTIONS.map(c => `<label class="chip"><input type="checkbox" data-col="${c.id}" ${(p.cols||[]).includes(c.id) ? 'checked' : ''}> ${c.label}</label>`).join('')}
-          <label class="chip"><input type="checkbox" data-k="isNew" ${p.isNew ? 'checked' : ''}> What's New</label>
-          <label class="chip"><input type="checkbox" data-k="inStock" ${p.inStock !== false ? 'checked' : ''}> In stock</label>
-        </div>
-
-        <label class="f"><span>Details table</span></label>
-        <div data-specs>
-          ${(p.spec || []).map((r, j) => specRow(r, j)).join('')}
-        </div>
-        <button class="btn ghost sm" data-addspec style="margin-top:8px">Add a row</button>
-
         <label class="f"><span>Photos</span></label>
         <div class="shots">
           ${(p.photos || []).map((ph, j) => `
@@ -393,6 +378,28 @@ function renderProducts(){
           </label>
           <span class="status" data-upstatus></span>
         </div>
+
+        <label class="f"><span>Description</span><textarea class="t" data-k="desc">${esc(p.desc)}</textarea></label>
+        <div class="rowbtns">
+          <button class="btn ghost sm" data-draft ${(p.photos || []).length ? '' : 'disabled'}>
+            Draft from photo
+          </button>
+          <span class="status" data-draftstatus>${(p.photos || []).length ? '' : 'Upload a photo first'}</span>
+        </div>
+
+        <label class="f"><span>Collections</span></label>
+        <div class="chips">
+          ${COLLECTIONS.map(c => `<label class="chip"><input type="checkbox" data-col="${c.id}" ${(p.cols||[]).includes(c.id) ? 'checked' : ''}> ${c.label}</label>`).join('')}
+          <label class="chip"><input type="checkbox" data-k="isNew" ${p.isNew ? 'checked' : ''}> What's New</label>
+          <label class="chip"><input type="checkbox" data-k="inStock" ${p.inStock !== false ? 'checked' : ''}> In stock</label>
+        </div>
+
+        <label class="f"><span>Details table</span></label>
+        <div data-specs>
+          ${(p.spec || []).map((r, j) => specRow(r, j)).join('')}
+        </div>
+        <button class="btn ghost sm" data-addspec style="margin-top:8px">Add a row</button>
+
 
         <div class="rowbtns">
           <button class="btn danger sm" data-delete>Delete this piece</button>
@@ -450,6 +457,36 @@ $('#plist').addEventListener('click', async e => {
     document.querySelector(`.prow[data-i="${i}"] .pbody`).hidden = false;
     return;
   }
+  const draft = e.target.closest('[data-draft]');
+  if (draft) {
+    collect(row, i);
+    const p = products[i];
+    const photo = (p.photos || [])[0];
+    const status = row.querySelector('[data-draftstatus]');
+    if (!photo) { status.textContent = 'Upload a photo first'; return; }
+    if (p.desc && p.desc.trim() &&
+        !confirm('Replace the description that is already there with a new draft?')) return;
+
+    draft.disabled = true;
+    status.className = 'status';
+    status.textContent = 'Reading the photo…';
+    try {
+      const out = await api('/api/admin/describe', {
+        method: 'POST',
+        body: JSON.stringify({ photo, title: p.title, hint: p.swatch })
+      });
+      p.desc = out.draft;
+      row.querySelector('[data-k="desc"]').value = out.draft;
+      status.className = 'status ok';
+      status.textContent = 'Draft written — edit it to sound like you';
+    } catch (err) {
+      status.className = 'status bad';
+      status.textContent = err.message;
+    }
+    draft.disabled = false;
+    return;
+  }
+
   if (e.target.closest('[data-delete]')) {
     if (!confirm(`Delete "${products[i].title}"? This cannot be undone once you save.`)) return;
     products.splice(i, 1);
